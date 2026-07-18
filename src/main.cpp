@@ -1,18 +1,97 @@
 #include <Arduino.h>
+#include <Wire.h>
 
-// put function declarations here:
-int myFunction(int, int);
+#include "bme680_sensor.h"
+#include "mpu6050_sensor.h"
+#include "board_config.h"
 
-void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+BME680Sensor bme;
+MPU6050Sensor imu;
+
+BME680Data env;
+MPU6050Data motion;
+
+void setup()
+{
+    Serial.begin(115200);
+
+    // ESP32 I2C pins
+    Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
+
+    if (!bme.begin())
+    {
+        Serial.println("BME680 initialization failed!");
+    }
+    else
+    {
+        Serial.println("BME680 initialized.");
+    }
+
+    if (!imu.begin())
+    {
+        Serial.println("MPU6050 initialization failed!");
+    }
+    else
+    {
+        Serial.println("MPU6050 initialized.");
+    }
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-}
+void loop()
+{
+    if (bme.read(env))
+    {
+        Serial.println("====== BME680 ======");
 
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+        Serial.print("Temperature : ");
+        Serial.print(env.temperature);
+        Serial.println(" °C");
+
+        Serial.print("Humidity    : ");
+        Serial.print(env.humidity);
+        Serial.println(" %");
+
+        Serial.print("Pressure    : ");
+        Serial.print(env.pressure);
+        Serial.println(" hPa");
+
+        Serial.print("Gas         : ");
+        Serial.print(env.gasResistance);
+        Serial.println(" KΩ");
+
+        Serial.print("Altitude    : ");
+        Serial.print(env.altitude);
+        Serial.println(" m");
+    }
+
+    if (imu.read(motion))
+    {
+        Serial.println("====== MPU6050 ======");
+
+        Serial.print("Accel X : ");
+        Serial.println(motion.accelX);
+
+        Serial.print("Accel Y : ");
+        Serial.println(motion.accelY);
+
+        Serial.print("Accel Z : ");
+        Serial.println(motion.accelZ);
+
+        Serial.print("Gyro X : ");
+        Serial.println(motion.gyroX);
+
+        Serial.print("Gyro Y : ");
+        Serial.println(motion.gyroY);
+
+        Serial.print("Gyro Z : ");
+        Serial.println(motion.gyroZ);
+
+        Serial.print("Temperature : ");
+        Serial.print(motion.temperature);
+        Serial.println(" °C");
+    }
+
+    Serial.println();
+
+    delay(1000);
 }
