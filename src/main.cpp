@@ -1,108 +1,74 @@
 #include <Arduino.h>
 #include <Wire.h>
-
 #include "board_config.h"
 #include "bme680_sensor.h"
 #include "mpu6050_sensor.h"
+#include "gps_sensor.h"
+#include "pms5003_sensor.h" // <--- ADD THIS
+#include "sx1278_lora.h"
 
 BME680Sensor bme;
 MPU6050Sensor imu;
+GPSSensor myGps;
+PMS5003Sensor pms;          // <--- ADD THIS
+SX1278LoRa lora;
 
 BME680Data env;
 MPU6050Data motion;
+GPSData loc;
+PMS5003Data dust;           // <--- ADD THIS
 
-void setup()
-{
+unsigned long packetCount = 0; 
+
+void setup() {
     Serial.begin(115200);
     delay(1000);
-
     Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
-
-    Serial.println("===============================");
-    Serial.println();
-
-    if (imu.begin())
-    {
-        Serial.println("MPU6050 initialized.");
-    }
-    else
-    {
-        Serial.println("MPU6050 initialization FAILED!");
-    }
-
-    if (bme.begin())
-    {
-        Serial.println("BME680 initialized.");
-    }
-    else
-    {
-        Serial.println("BME680 initialization FAILED!");
-    }
+    
+    imu.begin();
+    bme.begin();
+    myGps.begin();
+    pms.begin();            // <--- ADD THIS
+    
+    LoRaConfig config; 
+    lora.begin(config);
 }
 
-void loop()
-{
-    if (bme.read(env))
-    {
-        Serial.println("====== BME680 ======");
+void loop() {
+    // Read all sensors
+    bool bmeValid = bme.read(env);
+    bool imuValid = imu.read(motion);
+    bool gpsValid = myGps.read(loc);
+    bool pmsValid = pms.read(dust);   // <--- ADD THIS
 
-        Serial.print("Temperature : ");
-        Serial.print(env.temperature);
-        Serial.println(" C");
+    // Expand buffer size to handle the extra variables safely
+    char payloadBuffer[256]; 
 
-        Serial.print("Humidity    : ");
-        Serial.print(env.humidity);
-        Serial.println(" %");
+    // Format the entire telemetry string 
+    snprintf(payloadBuffer, sizeof(payloadBuffer), 
+             "%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.6f,%.6f,%.1f,%u,%u,%u",
+             packetCount,
+             bmeValid ? env.temperature : 0.0, 
+             bmeValid ? env.pressure : 0.0, 
+             bmeValid ? env.altitude : 0.0,
+             imuValid ? motion.accelX : 0.0, 
+             imuValid ? motion.accelY : 0.0, 
+             imuValid ? motion.accelZ : 0.0,
+             gpsValid ? loc.latitude : 0.0,      
+             gpsValid ? loc.longitude : 0.0,     
+             gpsValid ? loc.altitude : 0.0,
+             pmsValid ? dust.pm1_0 : 0,          // <--- ADD THIS
+             pmsValid ? dust.pm2_5 : 0,          // <--- ADD THIS
+             pmsValid ? dust.pm10_0 : 0);        // <--- ADD THIS
 
-        Serial.print("Pressure    : ");
-        Serial.print(env.pressure);
-        Serial.println(" hPa");
+    Serial.print("Transmitting: ");
+    Serial.println(payloadBuffer);
 
-        Serial.print("Gas         : ");
-        Serial.print(env.gasResistance);
-        Serial.println(" kOhm");
-
-        Serial.print("Altitude    : ");
-        Serial.print(env.altitude);
-        Serial.println(" m");
+    LoRaStatus status = lora.send(payloadBuffer);
+    
+    if (status == LoRaStatus::OK) {
+        packetCount++;
     }
-    else
-    {
-        Serial.println("BME680 not initialized.");
-    }
-
-    if (imu.read(motion))
-    {
-        Serial.println("====== MPU6050 ======");
-
-        Serial.print("Accel X : ");
-        Serial.println(motion.accelX);
-
-        Serial.print("Accel Y : ");
-        Serial.println(motion.accelY);
-
-        Serial.print("Accel Z : ");
-        Serial.println(motion.accelZ);
-
-        Serial.print("Gyro X : ");
-        Serial.println(motion.gyroX);
-
-        Serial.print("Gyro Y : ");
-        Serial.println(motion.gyroY);
-
-        Serial.print("Gyro Z : ");
-        Serial.println(motion.gyroZ);
-
-        Serial.print("Temperature : ");
-        Serial.print(motion.temperature);
-        Serial.println(" C");
-    }
-    else
-    {
-        Serial.println("MPU6050 not initialized.");
-    }
-
-    Serial.println();
 
     delay(1000);
 }

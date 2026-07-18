@@ -2,8 +2,11 @@
 
 bool MPU6050Sensor::begin()
 {
+    Serial.println("Initializing MPU6050...");
+
     if (!mpu.begin())
     {
+        Serial.println("MPU6050 initialization FAILED!");
         return false;
     }
 
@@ -16,6 +19,7 @@ bool MPU6050Sensor::begin()
     // Low pass filter
     mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
 
+    Serial.println("MPU6050 initialized.");
     return true;
 }
 
