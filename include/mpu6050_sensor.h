@@ -3,10 +3,10 @@
 
 #include <Arduino.h>
 #include <Wire.h>
-#include <Adafruit_MPU6050.h>
-#include <Adafruit_Sensor.h>
 
-// Structure containing all IMU values
+#include <I2Cdev.h>
+#include <MPU6050.h>
+
 struct MPU6050Data
 {
     float accelX;
@@ -23,14 +23,12 @@ struct MPU6050Data
 class MPU6050Sensor
 {
 public:
-
     bool begin();
-
     bool read(MPU6050Data &data);
 
 private:
-
-    Adafruit_MPU6050 mpu;
+    MPU6050 mpu;
+    bool initialized = false;
 };
 
 #endif

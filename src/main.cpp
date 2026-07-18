@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+#include "board_config.h"
 #include "bme680_sensor.h"
 #include "mpu6050_sensor.h"
-#include "board_config.h"
 
 BME680Sensor bme;
 MPU6050Sensor imu;
@@ -14,26 +14,29 @@ MPU6050Data motion;
 void setup()
 {
     Serial.begin(115200);
+    delay(1000);
 
-    // ESP32 I2C pins
     Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
 
-    if (!bme.begin())
+    Serial.println("===============================");
+    Serial.println();
+
+    if (imu.begin())
     {
-        Serial.println("BME680 initialization failed!");
+        Serial.println("MPU6050 initialized.");
     }
     else
+    {
+        Serial.println("MPU6050 initialization FAILED!");
+    }
+
+    if (bme.begin())
     {
         Serial.println("BME680 initialized.");
     }
-
-    if (!imu.begin())
-    {
-        Serial.println("MPU6050 initialization failed!");
-    }
     else
     {
-        Serial.println("MPU6050 initialized.");
+        Serial.println("BME680 initialization FAILED!");
     }
 }
 
@@ -45,7 +48,7 @@ void loop()
 
         Serial.print("Temperature : ");
         Serial.print(env.temperature);
-        Serial.println(" °C");
+        Serial.println(" C");
 
         Serial.print("Humidity    : ");
         Serial.print(env.humidity);
@@ -57,7 +60,7 @@ void loop()
 
         Serial.print("Gas         : ");
         Serial.print(env.gasResistance);
-        Serial.println(" KΩ");
+        Serial.println(" kOhm");
 
         Serial.print("Altitude    : ");
         Serial.print(env.altitude);
@@ -88,7 +91,11 @@ void loop()
 
         Serial.print("Temperature : ");
         Serial.print(motion.temperature);
-        Serial.println(" °C");
+        Serial.println(" C");
+    }
+    else
+    {
+        Serial.println("MPU6050 not initialized.");
     }
 
     Serial.println();
