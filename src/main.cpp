@@ -66,6 +66,10 @@ void loop()
         Serial.print(env.altitude);
         Serial.println(" m");
     }
+    else
+    {
+        Serial.println("BME680 not initialized.");
+    }
 
     if (imu.read(motion))
     {

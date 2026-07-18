@@ -2,51 +2,42 @@
 
 bool MPU6050Sensor::begin()
 {
-    Serial.println("Initializing MPU6050...");
-
-    Wire.begin();
-
-    mpu.initialize();
-
-    initialized = mpu.testConnection();
-
-    if (!initialized)
+    if (!mpu.begin())
     {
-        Serial.println("MPU6050 connection FAILED");
         return false;
     }
 
-    Serial.println("MPU6050 connected");
+    // Accelerometer range
+    mpu.setAccelerometerRange(MPU6050_RANGE_4_G);
+
+    // Gyroscope range
+    mpu.setGyroRange(MPU6050_RANGE_500_DEG);
+
+    // Low pass filter
+    mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
 
     return true;
 }
 
 bool MPU6050Sensor::read(MPU6050Data &data)
 {
-    if (!initialized)
-        return false;
+    sensors_event_t accel;
+    sensors_event_t gyro;
+    sensors_event_t temp;
 
-    int16_t ax, ay, az;
-    int16_t gx, gy, gz;
+    mpu.getEvent(&accel, &gyro, &temp);
 
-    mpu.getMotion6(
-        &ax, &ay, &az,
-        &gx, &gy, &gz);
+    // Convert acceleration from m/s² to g
+    data.accelX = accel.acceleration.x / 9.80665f;
+    data.accelY = accel.acceleration.y / 9.80665f;
+    data.accelZ = accel.acceleration.z / 9.80665f;
 
-    // Accelerometer (g)
-    data.accelX = ax / 16384.0f;
-    data.accelY = ay / 16384.0f;
-    data.accelZ = az / 16384.0f;
+    // Convert angular velocity from rad/s to deg/s
+    data.gyroX = gyro.gyro.x * 180.0f / PI;
+    data.gyroY = gyro.gyro.y * 180.0f / PI;
+    data.gyroZ = gyro.gyro.z * 180.0f / PI;
 
-    // Gyroscope (deg/s)
-    data.gyroX = gx / 131.0f;
-    data.gyroY = gy / 131.0f;
-    data.gyroZ = gz / 131.0f;
-
-    // Library doesn't provide temperature helper
-    int16_t rawTemp = mpu.getTemperature();
-
-    data.temperature = (rawTemp / 340.0f) + 36.53f;
+    data.temperature = temp.temperature;
 
     return true;
 }
