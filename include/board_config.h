@@ -12,8 +12,8 @@
                   PMS5003 UART
 =========================================================*/
 
-#define PMS_UART_RX        16      // ESP32 RX <- PMS5003 TX
-#define PMS_UART_TX        17      // ESP32 TX -> PMS5003 RX
+#define PMS_UART_RX        17      // ESP32 RX <- PMS5003 TX
+#define PMS_UART_TX        16      // ESP32 TX -> PMS5003 RX
 
 /*=========================================================
                   GPS UART
@@ -33,11 +33,5 @@
 #define LORA_CS_PIN        5
 #define LORA_RST_PIN       27
 #define LORA_DIO0_PIN      26
-
-/*=========================================================
-                    MQ SENSOR
-=========================================================*/
-
-#define MQ_ANALOG_PIN      34
 
 #endif

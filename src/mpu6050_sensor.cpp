@@ -7,6 +7,7 @@ bool MPU6050Sensor::begin()
     if (!mpu.begin())
     {
         Serial.println("MPU6050 initialization FAILED!");
+        Serial.println("Returning false from MPU6050 begin().");
         return false;
     }
 

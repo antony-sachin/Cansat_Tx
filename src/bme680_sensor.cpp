@@ -7,6 +7,7 @@ bool BME680Sensor::begin()
     {
         if (!bme.begin(0x77))
         {
+            Serial.println("BME680 initialization failed with both I2C addresses.");
             return false;
         }
     }
@@ -27,6 +28,7 @@ bool BME680Sensor::read(BME680Data &data)
     // Perform one complete measurement
     if (!bme.performReading())
     {
+        Serial.println("BME680 reading failed.");
         return false;
     }
 

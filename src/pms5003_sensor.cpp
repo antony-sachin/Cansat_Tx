@@ -31,6 +31,7 @@ bool PMS5003Sensor::read(PMS5003Data &data) {
         return true;
     } else {
         data.isValid = false;
+        Serial.println("PMS5003 read failed.");
         return false;
     }
 }

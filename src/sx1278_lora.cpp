@@ -29,6 +29,7 @@ bool SX1278LoRa::begin(const LoRaConfig &config) {
     if (state != RADIOLIB_ERR_NONE) {
         Serial.print("LoRa Init failed, code: ");
         Serial.println(state);
+        Serial.println("Returning false from SX1278 LoRa begin().");
         return false;
     }
 
